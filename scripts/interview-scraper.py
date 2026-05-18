@@ -6,6 +6,7 @@ import os
 import re
 import subprocess
 import urllib.error
+import urllib.parse
 import urllib.request
 from datetime import datetime
 from pathlib import Path
@@ -39,6 +40,20 @@ WATCHED_REPOS = [
 
 
 def req(url, timeout=20):
+    # URL 编码：中文等非 ASCII 字符转为百分号编码
+    # 只编码 query string 部分，不编码域名路径
+    parts = url.split('?', 1)
+    if len(parts) > 1:
+        # 对 query string 逐参数编码
+        params = parts[1].split('&')
+        encoded = []
+        for p in params:
+            if '=' in p:
+                k, v = p.split('=', 1)
+                encoded.append(f'{k}={urllib.parse.quote(v, safe="")}')
+            else:
+                encoded.append(urllib.parse.quote(p, safe=""))
+        url = parts[0] + '?' + '&'.join(encoded)
     r = urllib.request.Request(url, headers=HEADERS)
     return urllib.request.urlopen(r, timeout=timeout)
 
@@ -282,6 +297,7 @@ def create_company_pages(company_data):
     for company in COMPANIES:
         tag = COMPANY_TAGS[company]
         path = WIKI_ROOT / "entities" / f"{tag}-interview.md"
+        path.parent.mkdir(parents=True, exist_ok=True)
         if path.exists():
             continue
 
