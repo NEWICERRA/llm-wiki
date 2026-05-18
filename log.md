@@ -18,3 +18,6 @@
 
 ## [2026-05-18] ingest | AI Trending Projects 汇总
 - 新建: raw/articles/ai-trending-2026-05-18.md, concepts/ai-trending-2026-05-18.md
+
+## [2026-05-18] ingest | 社招面经汇总
+- 新建: raw/articles/interview-trending-2026-05-18.md, concepts/interview-trending-2026-05-18.md, entities/bytedance-interview.md, entities/meituan-interview.md, entities/baidu-interview.md, entities/jd-interview.md
