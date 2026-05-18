@@ -1,0 +1,6 @@
+# 只跟踪 wiki 相关文件
+# 排除已有目录
+/code/
+/my_git_test/
+/八股文/
+.DS_Store
