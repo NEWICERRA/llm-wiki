@@ -15,3 +15,6 @@
 - 新建 raw: raw/articles/ai-trending-2026-05-18.md
 - 新建概念页: concepts/ai-trending-2026-05-18.md
 - 更新: index.md（+1 page）
+
+## [2026-05-18] ingest | AI Trending Projects 汇总
+- 新建: raw/articles/ai-trending-2026-05-18.md, concepts/ai-trending-2026-05-18.md
