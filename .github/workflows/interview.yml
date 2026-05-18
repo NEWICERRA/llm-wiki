@@ -1,0 +1,41 @@
+name: 每日社招面经
+
+on:
+  schedule:
+    # 北京时间 09:00 = UTC 01:00（AI 趋势之后一小时跑）
+    - cron: '0 1 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  interview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 设置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 运行面经抓取
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WIKI_ROOT: ${{ github.workspace }}
+        run: python3 scripts/interview-scraper.py
+
+      - name: 提交更新
+        run: |
+          git config user.name "Interview Bot"
+          git config user.email "bot@llm-wiki"
+          git add -A
+          if git diff --staged --quiet; then
+            echo "没有新内容，跳过提交"
+          else
+            git commit -m "📝 社招面经汇总 $(date +'%Y-%m-%d')"
+            git push
+          fi
