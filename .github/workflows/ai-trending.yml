@@ -1,0 +1,41 @@
+name: 每日 AI 趋势
+
+on:
+  schedule:
+    # 北京时间 08:00 = UTC 00:00
+    - cron: '0 0 * * *'
+  workflow_dispatch:  # 支持手动触发
+
+permissions:
+  contents: write
+
+jobs:
+  trending:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 设置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 运行 AI 趋势抓取
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WIKI_ROOT: ${{ github.workspace }}
+        run: python3 scripts/ai-trending.py
+
+      - name: 提交更新到 wiki
+        run: |
+          git config user.name "AI Trend Bot"
+          git config user.email "bot@llm-wiki"
+          git add -A
+          if git diff --staged --quiet; then
+            echo "没有新内容，跳过提交"
+          else
+            git commit -m "📊 AI 趋势日报 $(date +'%Y-%m-%d')"
+            git push
+          fi
