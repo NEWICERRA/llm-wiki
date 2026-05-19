@@ -21,7 +21,6 @@ if GITHUB_TOKEN:
     HEADERS["Authorization"] = f"Bearer {GITHUB_TOKEN}"
 
 TODAY = datetime.now().strftime("%Y-%m-%d")
-YESTERDAY = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
 
 
 def req(url, timeout=20):
@@ -47,16 +46,16 @@ def safe_text(url, timeout=20):
 
 
 # ── 1. GitHub Trending ────────────────────────────────
-def fetch_github():
-    """获取 GitHub 热门 AI 项目"""
+def fetch_github(since_days=30):
+    """获取 GitHub 热门 AI 项目，since_days: 查询过去几天内创建的项目"""
     projects = []
     seen = set()
+    since = (datetime.now() - timedelta(days=since_days)).strftime("%Y-%m-%d")
 
-    # 维度 A: 本月新建 AI 项目
     urls = [
-        f"https://api.github.com/search/repositories?q=created:>{YESTERDAY}+AI&sort=stars&order=desc&per_page=10",
-        f"https://api.github.com/search/repositories?q=created:>{YESTERDAY}+machine+learning&sort=stars&order=desc&per_page=10",
-        f"https://api.github.com/search/repositories?q=created:>{YESTERDAY}+agent&sort=stars&order=desc&per_page=5",
+        f"https://api.github.com/search/repositories?q=created:>{since}+AI&sort=stars&order=desc&per_page=10",
+        f"https://api.github.com/search/repositories?q=created:>{since}+machine+learning&sort=stars&order=desc&per_page=10",
+        f"https://api.github.com/search/repositories?q=created:>{since}+agent&sort=stars&order=desc&per_page=5",
     ]
 
     for url in urls:
@@ -145,7 +144,7 @@ def fetch_arxiv():
 
 
 # ── 写入 wiki ─────────────────────────────────────────
-def write_raw(projects, hf_papers, models, arxiv_papers):
+def write_raw(projects_daily, projects_weekly, projects_monthly, hf_papers, models, arxiv_papers):
     path = WIKI_ROOT / "raw" / "articles" / f"ai-trending-{TODAY}.md"
     path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -160,13 +159,19 @@ def write_raw(projects, hf_papers, models, arxiv_papers):
         "",
     ]
 
-    if projects:
-        lines.append("## GitHub Trending 项目\n")
+    def write_gh_section(label, projects):
+        if not projects:
+            return
+        lines.append(f"## GitHub {label} 热门项目\n")
         for p in projects:
             lines.append(f"- **{p['name']}** | ⭐{p['stars']}")
             lines.append(f"  {p['desc']}")
             lines.append(f"  {p['url']}")
             lines.append("")
+
+    write_gh_section("今日", projects_daily)
+    write_gh_section("本周", projects_weekly)
+    write_gh_section("本月", projects_monthly)
 
     if hf_papers:
         lines.append("## HuggingFace 热门论文\n")
@@ -196,7 +201,7 @@ def write_raw(projects, hf_papers, models, arxiv_papers):
     return path
 
 
-def write_concept(projects, hf_papers, models, arxiv_papers):
+def write_concept(projects_daily, projects_weekly, projects_monthly, hf_papers, models, arxiv_papers):
     path = WIKI_ROOT / "concepts" / f"ai-trending-{TODAY}.md"
     path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -214,12 +219,18 @@ def write_concept(projects, hf_papers, models, arxiv_papers):
         "",
     ]
 
-    if projects:
-        lines.append("## 📦 热门项目\n")
+    def write_gh_section(label, projects):
+        if not projects:
+            return
+        lines.append(f"## 📦 {label}热门项目\n")
         for p in projects:
-            lines.append(f"- **{p['name']}** ⭐{p['stars']} — {p['desc']}")
+            lines.append(f"- **{p['name']}** ⭐{p['stars']}")
             lines.append(f"  {p['url']}")
             lines.append("")
+
+    write_gh_section("今日", projects_daily)
+    write_gh_section("本周", projects_weekly)
+    write_gh_section("本月", projects_monthly)
 
     if hf_papers:
         lines.append("## 📄 热门论文\n")
@@ -231,22 +242,25 @@ def write_concept(projects, hf_papers, models, arxiv_papers):
     if arxiv_papers:
         lines.append("## 📄 arXiv 论文\n")
         for p in arxiv_papers:
-            lines.append(f"- **{p['title']}** — {p['summary'][:100]}...")
+            lines.append(f"- **{p['title']}** ({p['date']})")
             lines.append(f"  {p['url']}")
             lines.append("")
 
     if models:
         lines.append("## 🧠 热门模型\n")
         for m in models:
-            desc = f" — {m['desc']}" if m['desc'] else ""
-            lines.append(f"- **{m['name']}**{desc}")
+            lines.append(f"- **{m['name']}**")
             lines.append(f"  {m['url']}")
             lines.append("")
 
     # 趋势观察
     obs = []
-    if projects and len(projects) >= 3:
-        obs.append(f"今日 GitHub 新建 AI 项目活跃，前 3 名合计 ⭐{sum(p['stars'] for p in projects[:3])}")
+    if projects_daily:
+        obs.append(f"今日热门 AI 项目 {len(projects_daily)} 个")
+    if projects_weekly:
+        obs.append(f"本周热门 AI 项目 {len(projects_weekly)} 个")
+    if projects_monthly:
+        obs.append(f"本月热门 AI 项目 {len(projects_monthly)} 个")
     if hf_papers:
         obs.append(f"HuggingFace 今日 {len(hf_papers)} 篇热门论文")
     if models:
@@ -258,7 +272,7 @@ def write_concept(projects, hf_papers, models, arxiv_papers):
         lines.append("")
 
     # 如果数据很少
-    total = len(projects) + len(hf_papers) + len(models)
+    total = len(projects_daily) + len(projects_weekly) + len(projects_monthly) + len(hf_papers) + len(models)
     if total == 0:
         lines.append("> 当日无显著趋势数据。")
 
@@ -319,8 +333,12 @@ def main():
 
     # 1. 抓取数据
     print("📡 获取 GitHub 热门项目...")
-    projects = fetch_github()
-    print(f"   → {len(projects)} 个项目")
+    projects_daily = fetch_github(1)
+    print(f"   → 今日: {len(projects_daily)} 个")
+    projects_weekly = fetch_github(7)
+    print(f"   → 本周: {len(projects_weekly)} 个")
+    projects_monthly = fetch_github(30)
+    print(f"   → 本月: {len(projects_monthly)} 个")
 
     print("📡 获取 HuggingFace 论文...")
     hf_papers = fetch_hf_papers()
@@ -337,8 +355,8 @@ def main():
 
     # 2. 写入 wiki
     print("✍️ 写入 wiki...")
-    raw_path = write_raw(projects, hf_papers, models, arxiv_papers)
-    concept_path = write_concept(projects, hf_papers, models, arxiv_papers)
+    raw_path = write_raw(projects_daily, projects_weekly, projects_monthly, hf_papers, models, arxiv_papers)
+    concept_path = write_concept(projects_daily, projects_weekly, projects_monthly, hf_papers, models, arxiv_papers)
 
     created_pages = [
         f"raw/articles/ai-trending-{TODAY}.md",
@@ -353,10 +371,14 @@ def main():
     # 3. 输出报告
     print("📊 汇总报告")
     print("─" * 40)
-    if projects:
-        print(f"🔥 热门项目: {len(projects)} 个")
-        for p in projects[:5]:
+    if projects_daily:
+        print(f"🔥 今日热门项目: {len(projects_daily)} 个")
+        for p in projects_daily[:5]:
             print(f"   {p['name']} ⭐{p['stars']}")
+    if projects_weekly:
+        print(f"📅 本周热门项目: {len(projects_weekly)} 个")
+    if projects_monthly:
+        print(f"📆 本月热门项目: {len(projects_monthly)} 个")
     if hf_papers:
         print(f"📄 热门论文: {len(hf_papers)} 篇")
     if models:

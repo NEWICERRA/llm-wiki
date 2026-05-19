@@ -11,28 +11,28 @@ sources: [raw/articles/ai-trending-2026-05-19.md]
 
 ## 📦 热门项目
 
-- **op7418/guizang-ppt-skill** ⭐9840 — AI-agent Skill for generating polished HTML slide decks: editorial magazine and Swiss layouts, image prompts, social covers, and a WebGL/low-power presentation runtime.
+- **op7418/guizang-ppt-skill** ⭐9840
   https://github.com/op7418/guizang-ppt-skill
 
-- **ConardLi/garden-skills** ⭐5219 — ConardLi's open-source Skills collection, featuring web design, knowledge retrieval, image generation, and more.
+- **ConardLi/garden-skills** ⭐5219
   https://github.com/ConardLi/garden-skills
 
-- **esengine/DeepSeek-Reasonix** ⭐4262 — DeepSeek-native AI coding agent for your terminal. Engineered around prefix-cache stability — leave it running.
+- **esengine/DeepSeek-Reasonix** ⭐4262
   https://github.com/esengine/DeepSeek-Reasonix
 
-- **crynta/terax-ai** ⭐3848 — Lightweight (7MB) AI terminal emulator (ADE) built in Rust & Tauri & React
+- **crynta/terax-ai** ⭐3848
   https://github.com/crynta/terax-ai
 
-- **1weiho/open-slide** ⭐3402 — A slide framework built for agents.
+- **1weiho/open-slide** ⭐3402
   https://github.com/1weiho/open-slide
 
-- **nexu-io/html-anything** ⭐3239 — ✨ The agentic HTML editor — your local AI agent writes the HTML, you ship it. 🚀 75 Skills × 9 Surfaces (magazine · deck · poster · XHS / tweet · prototype · data report · Hyperframes) 🛡️ Sandboxed preview · 📤 1-click to WeChat / X / Zhihu / HTML / PNG 🔑 Zero API key — Claude Code / Cursor / Codex / Gemini / Copilot / OpenCode / Qwen / Aider.
+- **nexu-io/html-anything** ⭐3239
   https://github.com/nexu-io/html-anything
 
-- **willchen96/mike** ⭐3106 — OSS AI Legal Platform
+- **willchen96/mike** ⭐3106
   https://github.com/willchen96/mike
 
-- **strukto-ai/mirage** ⭐2386 — A Unified Virtual Filesystem For AI Agents
+- **strukto-ai/mirage** ⭐2386
   https://github.com/strukto-ai/mirage
 
 - **cosmicstack-labs/mercury-agent** ⭐2271 — Soul-driven AI agent with permission-hardened tools, token budgets, and multi-channel access. Runs 24/7 from CLI or Telegram.
