@@ -13,6 +13,27 @@ import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
 from pathlib import Path
 
+# ── 翻译 ──────────────────────────────────────────────
+_translator = None
+
+def translate(text, target="zh-CN"):
+    """将英文文本翻译为中文，如果已是中文则跳过"""
+    if not text or not text.strip():
+        return text
+    # 检查是否已有中文字符
+    if re.search(r'[\u4e00-\u9fff]', text):
+        return text.strip()
+    global _translator
+    try:
+        if _translator is None:
+            from deep_translator import GoogleTranslator
+            _translator = GoogleTranslator(source="en", target=target)
+        result = _translator.translate(text.strip())
+        return result if result else text.strip()
+    except Exception as e:
+        print(f"  [WARN] 翻译失败 ({text[:30]}...): {e}")
+        return text.strip()
+
 # ── 配置 ──────────────────────────────────────────────
 WIKI_ROOT = Path(os.environ.get("WIKI_ROOT", "."))
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
@@ -70,7 +91,7 @@ def fetch_github(since_days=30):
             projects.append({
                 "name": name,
                 "stars": item["stargazers_count"],
-                "desc": (item["description"] or "").strip(),
+                "desc": translate((item["description"] or "").strip()),
                 "url": item["html_url"],
                 "source": "github",
             })
@@ -88,8 +109,8 @@ def fetch_hf_papers():
         return papers
     for p in data[:8]:
         papers.append({
-            "title": p.get("title", "N/A"),
-            "summary": (p.get("summary") or "")[:200],
+            "title": translate(p.get("title", "N/A")),
+            "summary": translate((p.get("summary") or "")[:200]),
             "url": f"https://huggingface.co/papers/{p.get('id', '')}",
             "source": "huggingface",
         })
@@ -108,7 +129,7 @@ def fetch_hf_models():
         mid = m.get("modelId", m.get("id", "N/A"))
         models.append({
             "name": mid,
-            "desc": (m.get("pipeline_tag") or m.get("cardData", {}).get("library_name", "") or "").strip(),
+            "desc": translate((m.get("pipeline_tag") or m.get("cardData", {}).get("library_name", "") or "").strip()),
             "url": f"https://huggingface.co/{mid}",
             "source": "huggingface",
         })
@@ -127,8 +148,8 @@ def fetch_arxiv():
         root = ET.fromstring(text)
         ns = {"a": "http://www.w3.org/2005/Atom"}
         for entry in list(root.findall("a:entry", ns))[:5]:
-            title = entry.find("a:title", ns).text.strip().replace("\n", " ")
-            summary = entry.find("a:summary", ns).text.strip()[:150].replace("\n", " ")
+            title = translate(entry.find("a:title", ns).text.strip().replace("\n", " "))
+            summary = translate(entry.find("a:summary", ns).text.strip()[:250].replace("\n", " "))
             link = entry.find("a:id", ns).text
             published = entry.find("a:published", ns).text[:10]
             papers.append({
@@ -224,7 +245,8 @@ def write_concept(projects_daily, projects_weekly, projects_monthly, hf_papers, 
             return
         lines.append(f"## 📦 {label}热门项目\n")
         for p in projects:
-            lines.append(f"- **{p['name']}** ⭐{p['stars']}")
+            desc = f" — {p['desc']}" if p['desc'] else ""
+            lines.append(f"- **{p['name']}** ⭐{p['stars']}{desc}")
             lines.append(f"  {p['url']}")
             lines.append("")
 
@@ -236,6 +258,8 @@ def write_concept(projects_daily, projects_weekly, projects_monthly, hf_papers, 
         lines.append("## 📄 热门论文\n")
         for p in hf_papers:
             lines.append(f"- **{p['title']}**")
+            if p['summary']:
+                lines.append(f"  {p['summary']}")
             lines.append(f"  {p['url']}")
             lines.append("")
 
@@ -243,13 +267,16 @@ def write_concept(projects_daily, projects_weekly, projects_monthly, hf_papers, 
         lines.append("## 📄 arXiv 论文\n")
         for p in arxiv_papers:
             lines.append(f"- **{p['title']}** ({p['date']})")
+            if p['summary']:
+                lines.append(f"  {p['summary']}")
             lines.append(f"  {p['url']}")
             lines.append("")
 
     if models:
         lines.append("## 🧠 热门模型\n")
         for m in models:
-            lines.append(f"- **{m['name']}**")
+            desc = f" — {m['desc']}" if m['desc'] else ""
+            lines.append(f"- **{m['name']}**{desc}")
             lines.append(f"  {m['url']}")
             lines.append("")
 
