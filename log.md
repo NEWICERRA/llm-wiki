@@ -486,3 +486,6 @@
 
 ## [2026-10-16] ingest | AI Trending Projects 汇总
 - 新建: raw/articles/ai-trending-2026-10-16.md, concepts/ai-trending-2026-10-16.md
+
+## [2026-10-17] ingest | AI Trending Projects 汇总
+- 新建: raw/articles/ai-trending-2026-10-17.md, concepts/ai-trending-2026-10-17.md
